@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Your Colours — Seasonal Palette Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── RESET & BASE ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --bg: #FAF8F5;
+    --text: #1E1612;
+    --muted: #7A6E66;
+    --border: rgba(0,0,0,0.08);
+    --radius: 12px;
+    --transition: 0.3s cubic-bezier(.4,0,.2,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── SEASON DATA (editable via JS) ───────────────────── */
+  /* All colours defined in the SEASONS object below */
+
+  /* ── HERO ─────────────────────────────────────────────── */
+  .hero {
+    text-align: center;
+    padding: 64px 24px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #FDF0E8 0%, #F5EEF8 50%, #E8F3F0 100%);
+    opacity: 0.5;
+    z-index: 0;
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .hero-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(42px, 8vw, 80px);
+    font-weight: 300;
+    letter-spacing: -1px;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: italic; }
+  .hero p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 36px;
+    font-weight: 300;
+  }
+
+  /* Floating colour dots in hero */
+  .hero-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  .hero-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    transition: transform var(--transition);
+    cursor: default;
+  }
+  .hero-dot:hover { transform: scale(1.2); }
+
+  /* ── SEASON TABS ──────────────────────────────────────── */
+  .tabs-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(250,248,245,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 18px 12px 14px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    transition: transform var(--transition);
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn:hover .tab-dot { transform: scale(1.4); }
+  .tab-btn.active { color: var(--text); font-weight: 600; }
+
+  /* ── SEASON PANEL ─────────────────────────────────────── */
+  .season-panel {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .season-panel.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Season header */
+  .season-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .season-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 10vw, 88px);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -2px;
+  }
+  .season-tagline {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .season-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: var(--muted);
+    max-width: 340px;
+    line-height: 1.5;
+  }
+
+  /* Profile pills */
+  .profile-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+  .profile-pill {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: white;
+  }
+  .profile-pill .label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .profile-pill .value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── PALETTE SECTION ──────────────────────────────────── */
+  .palette-section {
+    margin-bottom: 40px;
+  }
+  .palette-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .palette-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .swatches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 10px;
+  }
+  .swatches-grid.wide {
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px;
+  }
+
+  .swatch {
+    cursor: pointer;
+    transition: transform var(--transition);
+  }
+  .swatch:hover { transform: translateY(-4px); }
+  .swatch:hover .swatch-info { opacity: 1; }
+  .swatch-color {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    transition: box-shadow var(--transition);
+  }
+  .swatch:hover .swatch-color { box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+  .swatch-name {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.3;
+    font-weight: 400;
+  }
+  .swatch-info {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    margin-bottom: 6px;
+    transition: opacity var(--transition);
+    font-family: 'DM Sans', sans-serif;
+    z-index: 10;
+  }
+  .swatch-info::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--text);
+  }
+
+  /* Copied toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── TIPS SECTION ─────────────────────────────────────── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  @media (max-width: 560px) {
+    .tips-grid { grid-template-columns: 1fr; }
+    .season-header { grid-template-columns: 1fr; }
+    .season-desc { max-width: 100%; }
+  }
+  .tip-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .tip-card h4 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .tip-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .tip-card li {
+    font-size: 13px;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .tip-card li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+
+  /* Avoid section */
+  .avoid-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .avoid-chip {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    background: #F5F0EE;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    position: relative;
+    padding-left: 22px;
+  }
+  .avoid-chip::before {
+    content: '×';
+    position: absolute;
+    left: 9px;
+    color: #C08080;
+    font-weight: 700;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 32px 24px 48px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  .footer strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Colour copy feedback */
+  .swatch-color.copied {
+    outline: 3px solid var(--text);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eyebrow">Find Your Colours · Workshop by Mirette A. Esmat</p>
+  <h1>Your Seasonal<br><em>Colour Guide</em></h1>
+  <p>Tap a season below to explore your complete palette — colours, styling tips, and everything you need to dress with intention.</p>
+  <div class="hero-dots" id="heroDots"></div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs" id="tabsContainer"></div>
+</div>
+
+<div id="panelsContainer"></div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<div class="footer">
+  <strong>Find Your Colour Seasons Guide</strong> &nbsp;·&nbsp; Mirette A. Esmat <br>
+  <span style="margin-top:4px;display:block">Tap any swatch to copy its hex code</span>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// SEASONS DATA — edit freely to customise colours & content
+// ══════════════════════════════════════════════════════════
+const SEASONS = {
+  spring: {
+    name: "Spring",
+    tagline: "Warm · Bright · Clear",
+    accent: "#E07840",
+    desc: "Fresh, warm, and luminous — like golden sunlight on peachy skin. Your colours are clear and alive.",
+    undertone: "Warm",
+    value: "Light–Medium",
+    chroma: "Bright & Clear",
+    metal: "Gold",
+    contrast: "Low–Medium",
+    // ── Palette categories ──────────────────────────────
+    palette: {
+      "Neutrals & Basics": [
+        { name: "Warm Ivory",      hex: "#F8EDD8" },
+        { name: "Camel",           hex: "#C89050" },
+        { name: "Golden Beige",    hex: "#E0C090" },
+        { name: "Warm White",      hex: "#FFF6EE" },
+        { name: "Tan",             hex: "#C8A070" },
+        { name: "Warm Brown",      hex: "#9A6838" },
+        { name: "Cognac",          hex: "#A05428" },
+        { name: "Cream",           hex: "#F5E8CC" },
+      ],
+      "Core Colours": [
+        { name: "Peach",           hex: "#F4A878" },
+        { name: "Coral",           hex: "#E87050" },
+        { name: "Warm Red",        hex: "#D84030" },
+        { name: "Tomato",          hex: "#E84828" },
+        { name: "Salmon",          hex: "#F08868" },
+        { name: "Golden Yellow",   hex: "#E8C840" },
+        { name: "Warm Mustard",    hex: "#D0A020" },
+        { name: "Butter",          hex: "#F0DC80" },
+        { name: "Spring Green",    hex: "#88C858" },
+        { name: "Lime",            hex: "#A8D840" },
+        { name: "Grass Green",     hex: "#70B848" },
+        { name: "Warm Teal",       hex: "#40B0A0" },
+        { name: "Turquoise",       hex: "#30C8B8" },
+        { name: "Sky Blue",        hex: "#78C0D8" },
+        { name: "Cornflower",      hex: "#5898D8" },
+        { name: "Warm Pink",       hex: "#F08898" },
+        { name: "Watermelon",      hex: "#E85870" },
+        { name: "Soft Orange",     hex: "#F09050" },
+      ],
+      "Accent & Statement": [
+        { name: "Tangerine",       hex: "#F07028" },
+        { name: "Poppy Red",       hex: "#D83020" },
+        { name: "Electric Teal",   hex: "#10D8C0" },
+        { name: "Bright Yellow",   hex: "#F8D020" },
+        { name: "Hot Coral",       hex: "#F06040" },
+        { name: "Vivid Pink",      hex: "#F06080" },
+      ],
+      "Makeup Palette": [
+        { name: "Peachy Nude",     hex: "#E8B098" },
+        { name: "Warm Coral Lip",  hex: "#E07058" },
+        { name: "Soft Terracotta", hex: "#C87850" },
+        { name: "Golden Bronze",   hex: "#C89040" },
+        { name: "Warm Blush",      hex: "#E8A090" },
+        { name: "Copper Lid",      hex: "#B07038" },
+        { name: "Warm Taupe",      hex: "#C8A888" },
+        { name: "Brick Liner",     hex: "#B05030" },
+      ],
+      "Hijab & Scarf Harmony": [
+        { name: "Warm Ivory",      hex: "#F8EDD8" },
+        { name: "Peach Rose",      hex: "#F0B098" },
+        { name: "Soft Coral",      hex: "#E8907A" },
+        { name: "Warm Blush",      hex: "#E8A090" },
+        { name: "Golden Sand",     hex: "#E0C090" },
+        { name: "Camel",           hex: "#C89050" },
+        { name: "Sage",            hex: "#A8C890" },
+        { name: "Sky Blue",        hex: "#90C8E0" },
+      ],
+    },
+    tips: [
+      "Layer warm-toned neutrals as your foundation",
+      "Peach and coral near the face are your superpower",
+      "Gold jewellery always wins over silver",
+      "Swap stark black for warm brown or cognac",
+      "Pastels work if they have a peachy or golden tint",
+      "You glow in natural daylight — schedule photos outdoors",
+    ],
+    avoid: ["Pure black", "Cool grey", "Icy blue", "Cool fuchsia", "Stark white", "Silver (in isolation)"],
+    celebrities: "Blake Lively · Jessica Alba · Nicole Kidman (warm era)",
+  },
+
+  summer: {
+    name: "Summer",
+    tagline: "Cool · Soft · Romantic",
+    accent: "#7090C0",
+    desc: "Cool, dusty, and delicate — like twilight in bloom. Your beauty thrives in soft harmony.",
+    undertone: "Cool",
+    value: "Light–Medium",
+    chroma: "Soft & Muted",
+    metal: "Silver / Rose Gold",
+    contrast: "Low",
+    palette: {
+      "Neutrals & Basics": [
+        { name: "Soft White",      hex: "#F5F2F0" },
+        { name: "Rose Taupe",      hex: "#C0A0A0" },
+        { name: "Cocoa",           hex: "#907878" },
+        { name: "Stone",           hex: "#C0B8B8" },
+        { name: "Cool Beige",      hex: "#D8C8C0" },
+        { name: "Greige",          hex: "#C8C0B8" },
+        { name: "Ash Brown",       hex: "#907070" },
+        { name: "Dusty Brown",     hex: "#9A8080" },
+      ],
+      "Core Colours": [
+        { name: "Dusty Rose",      hex: "#D890A0" },
+        { name: "Blush",           hex: "#F0C0C0" },
+        { name: "Mauve",           hex: "#B88098" },
+        { name: "Soft Lavender",   hex: "#C0B0D0" },
+        { name: "Dusty Purple",    hex: "#9078A8" },
+        { name: "Cool Berry",      hex: "#987098" },
+        { name: "Powder Blue",     hex: "#A0C0D8" },
+        { name: "Slate Blue",      hex: "#7090B8" },
+        { name: "Periwinkle",      hex: "#8898C8" },
+        { name: "Baby Blue",       hex: "#A8C8D8" },
+        { name: "Cool Teal",       hex: "#70A8B0" },
+        { name: "Sage",            hex: "#90A888" },
+        { name: "Dusty Green",     hex: "#8098A0" },
+        { name: "Cool Mint",       hex: "#A0C8C0" },
+        { name: "Soft Plum",       hex: "#987898" },
+        { name: "Lilac",           hex: "#C0A8D0" },
+        { name: "Rose Brown",      hex: "#B08080" },
+        { name: "Antique Rose",    hex: "#C898A0" },
+      ],
+      "Accent & Statement": [
+        { name: "Deep Mauve",      hex: "#905870" },
+        { name: "Cool Magenta",    hex: "#B05880" },
+        { name: "Deep Slate",      hex: "#506080" },
+        { name: "Eggplant",        hex: "#685078" },
+        { name: "Cool Teal Deep",  hex: "#407080" },
+        { name: "Dusty Rose Deep", hex: "#B07080" },
+      ],
+      "Makeup Palette": [
+        { name: "Cool Nude",       hex: "#D8B0B0" },
+        { name: "Mauve Lip",       hex: "#C08898" },
+        { name: "Rose Pink Lip",   hex: "#D890A0" },
+        { name: "Plum Lip",        hex: "#906080" },
+        { name: "Cool Blush",      hex: "#E0B0C0" },
+        { name: "Dusty Rose Eye",  hex: "#C098A0" },
+        { name: "Lavender Eye",    hex: "#B0A0C8" },
+        { name: "Cool Taupe",      hex: "#B0A0A0" },
+      ],
+      "Hijab & Scarf Harmony": [
+        { name: "Soft White",      hex: "#F5F2F0" },
+        { name: "Blush Pink",      hex: "#F0C0C0" },
+        { name: "Dusty Rose",      hex: "#D890A0" },
+        { name: "Lavender",        hex: "#C0B0D0" },
+        { name: "Powder Blue",     hex: "#A0C0D8" },
+        { name: "Soft Mauve",      hex: "#C098A8" },
+        { name: "Cool Mint",       hex: "#A0C8C0" },
+        { name: "Stone",           hex: "#C0B8B8" },
+      ],
+    },
+    tips: [
+      "Soft, dusty tones are your flattering foundation",
+      "Blush, mauve, and lavender near the face are ethereal",
+      "Silver and rose gold jewellery enhance your undertone",
+      "Avoid pure white — swap for soft, rosy white",
+      "Mix within your muted palette for effortless harmony",
+      "Cool natural light (overcast days) is your best light for photos",
+    ],
+    avoid: ["Orange", "Warm yellow", "Bright warm red", "Gold jewellery", "Stark black", "Olive green"],
+    celebrities: "Cate Blanchett · Gwyneth Paltrow · Naomi Watts",
+  },
+
+  autumn: {
+    name: "Autumn",
+    tagline: "Warm · Rich · Earthy",
+    accent: "#B05828",
+    desc: "Deep, golden, and complex — like autumn leaves at their peak. Your colours are rich and grounded.",
+    undertone: "Warm",
+    value: "Medium–Deep",
+    chroma: "Muted & Earthy",
+    metal: "Gold & Bronze",
+    contrast: "Medium–High",
+    palette: {
+      "Neutrals & Basics": [
+        { name: "Warm Brown",      hex: "#8C5028" },
+        { name: "Camel",           hex: "#C08040" },
+        { name: "Rust",            hex: "#A04818" },
+        { name: "Olive",           hex: "#787830" },
+        { name: "Chestnut",        hex: "#7A3E20" },
+        { name: "Dark Caramel",    hex: "#A06030" },
+        { name: "Coffee",          hex: "#603820" },
+        { name: "Warm Cream",      hex: "#F0DFB8" },
+      ],
+      "Core Colours": [
+        { name: "Burnt Orange",    hex: "#C86020" },
+        { name: "Rust",            hex: "#B84820" },
+        { name: "Terracotta",      hex: "#C06838" },
+        { name: "Warm Red",        hex: "#B03020" },
+        { name: "Tomato",          hex: "#C03818" },
+        { name: "Olive Green",     hex: "#7A7830" },
+        { name: "Forest Green",    hex: "#3A6028" },
+        { name: "Moss",            hex: "#607040" },
+        { name: "Mustard",         hex: "#C89820" },
+        { name: "Gold",            hex: "#C8A020" },
+        { name: "Amber",           hex: "#D09030" },
+        { name: "Ochre",           hex: "#C08828" },
+        { name: "Deep Teal",       hex: "#286060" },
+        { name: "Bronze Teal",     hex: "#407868" },
+        { name: "Warm Purple",     hex: "#704058" },
+        { name: "Aubergine",       hex: "#603048" },
+        { name: "Dark Chocolate",  hex: "#402010" },
+        { name: "Mahogany",        hex: "#803828" },
+      ],
+      "Accent & Statement": [
+        { name: "Deep Burgundy",   hex: "#702030" },
+        { name: "Pumpkin",         hex: "#D05818" },
+        { name: "Chartreuse",      hex: "#98A818" },
+        { name: "Deep Forest",     hex: "#204820" },
+        { name: "Espresso",        hex: "#301808" },
+        { name: "Deep Gold",       hex: "#B08010" },
+      ],
+      "Makeup Palette": [
+        { name: "Warm Nude",       hex: "#C89870" },
+        { name: "Terracotta Lip",  hex: "#B86840" },
+        { name: "Brick Red Lip",   hex: "#B04028" },
+        { name: "Warm Brown Lip",  hex: "#8A4828" },
+        { name: "Copper Blush",    hex: "#C08858" },
+        { name: "Bronze Eye",      hex: "#A07030" },
+        { name: "Olive Eye",       hex: "#7A7030" },
+        { name: "Warm Taupe Eye",  hex: "#987860" },
+      ],
+      "Hijab & Scarf Harmony": [
+        { name: "Warm Cream",      hex: "#F0DFB8" },
+        { name: "Camel",           hex: "#C08040" },
+        { name: "Terracotta",      hex: "#C06838" },
+        { name: "Rust",            hex: "#B84820" },
+        { name: "Mustard",         hex: "#C89820" },
+        { name: "Olive",           hex: "#787830" },
+        { name: "Forest Green",    hex: "#3A6028" },
+        { name: "Deep Teal",       hex: "#286060" },
+      ],
+    },
+    tips: [
+      "Earthy, nature-inspired colours are your natural habitat",
+      "Rust, burnt orange, and olive are more powerful than black",
+      "Gold and bronze jewellery echo your warmth beautifully",
+      "Rich textures (velvet, suede, leather) amplify your depth",
+      "Avoid cool pinks — they compete with your golden warmth",
+      "Warm candle-lit environments are your most flattering light",
+    ],
+    avoid: ["Pastel pink", "Cool blue", "Icy grey", "Pure white", "Cool fuchsia", "Silver (alone)"],
+    celebrities: "Beyoncé · Jennifer Lopez · Halle Berry (warm tones) · Rihanna",
+  },
+
+  winter: {
+    name: "Winter",
+    tagline: "Cool · Bold · High Contrast",
+    accent: "#3848A0",
+    desc: "Crisp, dramatic, and commanding — built for bold contrast. You wear colour with authority.",
+    undertone: "Cool",
+    value: "Deep or High Contrast",
+    chroma: "Clear & Bold",
+    metal: "Silver & White Gold",
+    contrast: "High",
+    palette: {
+      "Neutrals & Basics": [
+        { name: "Pure White",      hex: "#F8F8F8" },
+        { name: "Cool White",      hex: "#EEF0F5" },
+        { name: "Charcoal",        hex: "#383838" },
+        { name: "Black",           hex: "#181818" },
+        { name: "Cool Grey",       hex: "#808898" },
+        { name: "Slate",           hex: "#607080" },
+        { name: "Greige (cool)",   hex: "#B0B0B8" },
+        { name: "Ink Navy",        hex: "#181828" },
+      ],
+      "Core Colours": [
+        { name: "True Red",        hex: "#C01828" },
+        { name: "Fuchsia",         hex: "#C01890" },
+        { name: "Hot Pink",        hex: "#E82898" },
+        { name: "Cool Pink",       hex: "#E880A8" },
+        { name: "Royal Blue",      hex: "#1848B0" },
+        { name: "Cobalt",          hex: "#1060C8" },
+        { name: "Navy",            hex: "#182060" },
+        { name: "Electric Blue",   hex: "#1880E0" },
+        { name: "Emerald",         hex: "#107850" },
+        { name: "Forest (cool)",   hex: "#105828" },
+        { name: "Cool Teal",       hex: "#107890" },
+        { name: "Peacock",         hex: "#087880" },
+        { name: "Icy Pink",        hex: "#F0B0C8" },
+        { name: "Icy Blue",        hex: "#C0D8F0" },
+        { name: "Icy Lavender",    hex: "#D0C8F0" },
+        { name: "Deep Purple",     hex: "#401878" },
+        { name: "Violet",          hex: "#6018B0" },
+        { name: "Plum",            hex: "#602060" },
+      ],
+      "Accent & Statement": [
+        { name: "Neon Fuchsia",    hex: "#F020A0" },
+        { name: "True Cobalt",     hex: "#0848E0" },
+        { name: "Scarlet",         hex: "#E01020" },
+        { name: "Deep Emerald",    hex: "#086040" },
+        { name: "Black",           hex: "#101010" },
+        { name: "Shocking Pink",   hex: "#E83090" },
+      ],
+      "Makeup Palette": [
+        { name: "Cool Nude",       hex: "#C8B0B8" },
+        { name: "Berry Lip",       hex: "#903060" },
+        { name: "True Red Lip",    hex: "#C01828" },
+        { name: "Fuchsia Lip",     hex: "#C02080" },
+        { name: "Cool Pink Lip",   hex: "#D87098" },
+        { name: "Icy Highlight",   hex: "#E8E8F0" },
+        { name: "Charcoal Eye",    hex: "#384050" },
+        { name: "Deep Purple Eye", hex: "#502878" },
+      ],
+      "Hijab & Scarf Harmony": [
+        { name: "Pure White",      hex: "#F8F8F8" },
+        { name: "Icy Pink",        hex: "#F0B0C8" },
+        { name: "Cool Pink",       hex: "#E880A8" },
+        { name: "Icy Lavender",    hex: "#D0C8F0" },
+        { name: "Royal Blue",      hex: "#1848B0" },
+        { name: "Cobalt",          hex: "#1060C8" },
+        { name: "Emerald",         hex: "#107850" },
+        { name: "Black",           hex: "#181818" },
+      ],
+    },
+    tips: [
+      "High contrast is your superpower — black and white together",
+      "Bold, clear colours look striking, never overwhelming on you",
+      "Silver jewellery enhances your cool, crisp undertone",
+      "Icy pastels work beautifully; warm pastels flatten you",
+      "Avoid muted or dusty tones — they wash out your features",
+      "You photograph best in strong, even daylight or studio light",
+    ],
+    avoid: ["Warm orange", "Camel", "Warm brown", "Olive", "Dusty tones", "Gold jewellery"],
+    celebrities: "Lupita Nyong'o · Priyanka Chopra · Zendaya · Dua Lipa",
+  },
+};
+// ══════════════════════════════════════════════════════════
+// END EDITABLE DATA
+// ══════════════════════════════════════════════════════════
+
+// ── Build hero dots ─────────────────────────────────────
+const heroDots = document.getElementById('heroDots');
+const allDotColours = ['#E07840','#F4A878','#E8C840','#88C858','#78C0D8',
+  '#D890A0','#A0C0D8','#B88098','#C0B0D0','#7090B8',
+  '#C86020','#C08040','#7A7830','#286060','#C89820',
+  '#1848B0','#C01828','#107850','#E82898','#401878'];
+allDotColours.forEach(c => {
+  const d = document.createElement('div');
+  d.className = 'hero-dot';
+  d.style.background = c;
+  heroDots.appendChild(d);
+});
+
+// ── Build tabs & panels ─────────────────────────────────
+const tabsContainer = document.getElementById('tabsContainer');
+const panelsContainer = document.getElementById('panelsContainer');
+const SEASON_KEYS = ['spring','summer','autumn','winter'];
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+function luminance([r,g,b]) {
+  return (0.299*r + 0.587*g + 0.114*b) / 255;
+}
+
+SEASON_KEYS.forEach(key => {
+  const s = SEASONS[key];
+
+  // Tab
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn';
+  btn.dataset.season = key;
+  btn.innerHTML = `<span class="tab-dot" style="background:${s.accent}"></span>${s.name}`;
+  btn.addEventListener('click', () => switchSeason(key));
+  tabsContainer.appendChild(btn);
+
+  // Panel
+  const panel = document.createElement('div');
+  panel.className = 'season-panel';
+  panel.id = `panel-${key}`;
+  panel.style.setProperty('--season-accent', s.accent);
+
+  // Header
+  const headerHTML = `
+    <div class="season-header">
+      <div>
+        <div class="season-name" style="color:${s.accent}">${s.name}</div>
+        <div class="season-tagline">${s.tagline}</div>
+      </div>
+      <div class="season-desc">${s.desc}</div>
+    </div>
+    <div class="profile-row">
+      ${[['Undertone',s.undertone],['Value',s.value],['Chroma',s.chroma],['Metal',s.metal],['Contrast',s.contrast]].map(([l,v]) => `
+        <div class="profile-pill">
+          <span class="label">${l}</span>
+          <span class="value">${v}</span>
+        </div>`).join('')}
+    </div>
+  `;
+
+  // Palette sections
+  let paletteHTML = '';
+  for (const [sectionName, swatches] of Object.entries(s.palette)) {
+    const isWide = swatches.length > 10;
+    paletteHTML += `
+      <div class="palette-section">
+        <div class="palette-section-title">${sectionName}</div>
+        <div class="swatches-grid ${isWide ? 'wide' : ''}">
+          ${swatches.map(sw => {
+            const lum = luminance(hexToRgb(sw.hex));
+            return `
+              <div class="swatch" onclick="copyHex('${sw.hex}', this)" title="${sw.name} · ${sw.hex}">
+                <div class="swatch-color" style="background:${sw.hex}">
+                  <div class="swatch-info">${sw.hex}</div>
+                </div>
+                <div class="swatch-name">${sw.name}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Tips
+  const tipsHTML = `
+    <div class="palette-section">
+      <div class="palette-section-title">Styling Tips</div>
+      <div class="tips-grid">
+        <div class="tip-card">
+          <h4 style="color:${s.accent}">Your Best Practices</h4>
+          <ul>${s.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+        <div class="tip-card">
+          <h4 style="color:${s.accent}">Approach with Care</h4>
+          <div class="avoid-chips">${s.avoid.map(a => `<span class="avoid-chip">${a}</span>`).join('')}</div>
+          <div style="margin-top:20px">
+            <h4 style="color:${s.accent};margin-bottom:8px">Celebrity Palette References</h4>
+            <p style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${s.celebrities}</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  panel.innerHTML = headerHTML + paletteHTML + tipsHTML;
+  panelsContainer.appendChild(panel);
+});
+
+// ── Season switching ────────────────────────────────────
+function switchSeason(key) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.season === key);
+    if (b.dataset.season === key) {
+      b.style.borderBottomColor = SEASONS[key].accent;
+      b.style.color = SEASONS[key].accent;
+    } else {
+      b.style.borderBottomColor = 'transparent';
+      b.style.color = '';
+    }
+  });
+  document.querySelectorAll('.season-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${key}`);
+  });
+  // Smooth scroll to panel
+  document.getElementById(`panel-${key}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Activate spring by default
+switchSeason('spring');
+
+// ── Copy hex ────────────────────────────────────────────
+const toast = document.getElementById('toast');
+let toastTimer;
+function copyHex(hex, el) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(hex).catch(() => {});
+  }
+  // Visual feedback
+  const colorEl = el.querySelector('.swatch-color');
+  colorEl.classList.add('copied');
+  setTimeout(() => colorEl.classList.remove('copied'), 800);
+  // Toast
+  clearTimeout(toastTimer);
+  toast.textContent = `Copied ${hex}`;
+  toast.classList.add('show');
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
